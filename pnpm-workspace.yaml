@@ -1,0 +1,8 @@
+# pnpm workspace definition.
+# Real packages live under these globs; placeholder directories that only
+# contain a README (no package.json) are ignored until their milestone.
+packages:
+  - "apps/*"
+  - "services/*"
+  - "packages/*"
+  - "spikes/*"
