@@ -6,6 +6,8 @@
  * price metrics use Migros' own per-100 `unitPrice` (see ADR-0002 / the M0 spike).
  */
 
+import { z } from "zod";
+
 export const LOCALES = ["en", "de", "fr", "it"] as const;
 export type Locale = (typeof LOCALES)[number];
 
@@ -105,4 +107,58 @@ export function computeMetrics(input: MetricInput): Record<MetricId, number | nu
     MetricId,
     number | null
   >;
+}
+
+// ---------------------------------------------------------------------------
+// API contract: zod input schemas + DTOs (shared by services/api and the app)
+// ---------------------------------------------------------------------------
+
+export const metricIdSchema = z.enum(METRIC_IDS);
+export const localeSchema = z.enum(LOCALES);
+
+export const cursorSchema = z.object({ value: z.number(), uid: z.string() });
+export type Cursor = z.infer<typeof cursorSchema>;
+
+export const listInputSchema = z.object({
+  metric: metricIdSchema.default("proteinPerChf"),
+  locale: localeSchema.default("de"),
+  limit: z.number().int().min(1).max(50).default(20),
+  cursor: cursorSchema.nullish(),
+});
+export type ListInput = z.infer<typeof listInputSchema>;
+
+export const searchInputSchema = z.object({
+  q: z.string().trim().min(1).max(100),
+  locale: localeSchema.default("de"),
+  limit: z.number().int().min(1).max(50).default(20),
+});
+export type SearchInput = z.infer<typeof searchInputSchema>;
+
+export const getInputSchema = z.object({
+  uid: z.string().min(1),
+  locale: localeSchema.default("de"),
+});
+export type GetInput = z.infer<typeof getInputSchema>;
+
+/** A product row for list/search/detail responses (nullable where data is missing). */
+export interface ProductListItem {
+  uid: string;
+  name: string | null;
+  brand: string | null;
+  imageUrl: string | null;
+  priceChf: number | null;
+  pricePer100: number | null;
+  pricePer100Unit: string | null;
+  quantity: string | null;
+  energyKcal: number | null;
+  proteinG: number | null;
+  carbsG: number | null;
+  fatG: number | null;
+  /** Value of the metric the list was sorted by (proteinPerChf for get/search). */
+  metricValue: number | null;
+}
+
+export interface ProductList {
+  items: ProductListItem[];
+  nextCursor: Cursor | null;
 }

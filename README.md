@@ -12,8 +12,8 @@ profiles and suggests ingredients and recipes that match them.
 
 ## Status
 
-🚧 Early development — **M1 (data pipeline)**; M0 (scaffold + feasibility spike) complete. See
-[`docs/ROADMAP.md`](docs/ROADMAP.md).
+🚧 Early development — **M2 (tRPC API)**; M0 (scaffold + spike) and M1 (data pipeline) merged.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Tech stack
 
