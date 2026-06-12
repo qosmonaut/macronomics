@@ -12,7 +12,7 @@ profiles and suggests ingredients and recipes that match them.
 
 ## Status
 
-🚧 Early development — **M0 (scaffold + feasibility spike)**. See
+🚧 Early development — **M1 (data pipeline)**; M0 (scaffold + feasibility spike) complete. See
 [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Tech stack

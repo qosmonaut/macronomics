@@ -21,16 +21,19 @@ Legend: ✅ done · 🚧 in progress · ⬜ planned
   M6 note: recipe macros (kcal/protein/fat/carbs, per portion) come from the detail page's German
   nutrition keys; the JSON-LD mislabels carbs as `fiberContent` and no real fibre is published.
 
-## M1 — Data pipeline ⬜
+## M1 — Data pipeline 🚧
 
-- `packages/migros`: adapter over the wrapper — guest-token cache, token-bucket rate
-  limiter, exponential backoff, response → domain mappers, contract tests with recorded
-  fixtures, a canary that flags upstream shape changes.
-- `packages/db`: Drizzle schema + migrations — `products`, `product_i18n`,
-  `product_nutrition`, denormalized `product_metrics` (indexed ratios), `ingestion_runs`.
-- `services/ingestion`: **local seed script** → Supabase (EU). Idempotent, resumable,
-  unit-normalized (per-100g/ml; price normalized to the same basis).
-- **Legal/ToS sanity check** on commercial use of Migros data (pulled forward).
+- ✅ `packages/shared`: domain types + sort-metric math (pulled forward from M2).
+- ✅ `packages/migros`: adapter — guest-token cache, request throttle, response → domain
+  mappers (+ hermetic mapper test). _Deferred: backoff/retry, fixture contract tests + canary._
+- ✅ `packages/db`: Drizzle schema + generated migrations (`products`, `product_i18n`,
+  `product_nutrition`, indexed `product_metrics`, `ingestion_runs`); driver-swappable client
+  (Supabase EU / pglite — [ADR-0003](adr/0003-local-dev-database-and-migrations.md)).
+- ✅ `services/ingestion`: local seed script (search → map → normalize → upsert), `--dry-run`,
+  DB read-back of the protein/CHF sort. Verified live + pglite end-to-end.
+  _Deferred: resumable checkpointing, category-wide crawl._
+- ⬜ **Production run** against Supabase EU (needs the project + `DATABASE_URL`).
+- ⬜ **Legal/ToS sanity check** on commercial use of Migros data (pulled forward).
 
 ## M2 — tRPC API ⬜
 
