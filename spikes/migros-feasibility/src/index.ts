@@ -148,7 +148,12 @@ function parseProduct(item: Json): ParsedProduct {
 async function getToken(): Promise<string | undefined> {
   try {
     const guest = (await MigrosAPI.account.oauth2.getGuestToken()) as Record<string, Json>;
-    await capture("01-guest-token", guest);
+    const redactedGuest: Record<string, Json> = {
+      ...guest,
+      token: typeof guest.token === "string" ? "<redacted>" : guest.token,
+      access_token: typeof guest.access_token === "string" ? "<redacted>" : guest.access_token,
+    };
+    await capture("01-guest-token", redactedGuest);
     const token =
       (guest?.token as string | undefined) ??
       (guest?.access_token as string | undefined) ??
