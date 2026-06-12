@@ -59,19 +59,30 @@ async function main(): Promise<void> {
       .insert(schema.ingestionRuns)
       .values({ id: runId, startedAt: new Date(), status: "running", query });
 
-    let upserted = 0;
-    for (const p of products) {
-      await upsertProduct(handle.db, p);
-      upserted++;
-    }
-    await handle.db
-      .update(schema.ingestionRuns)
-      .set({ finishedAt: new Date(), status: "ok", productsUpserted: upserted })
-      .where(eq(schema.ingestionRuns.id, runId));
-    console.log(`  upserted ${upserted} products (run ${runId})`);
+    try {
+      let upserted = 0;
+      for (const p of products) {
+        await upsertProduct(handle.db, p);
+        upserted++;
+      }
+      await handle.db
+        .update(schema.ingestionRuns)
+        .set({ finishedAt: new Date(), status: "ok", productsUpserted: upserted })
+        .where(eq(schema.ingestionRuns.id, runId));
+      console.log(`  upserted ${upserted} products (run ${runId})`);
 
-    await report(handle.db, locales[0] ?? "de");
-  } finally {
+      await report(handle.db, locales[0] ?? "de");
+    } catch (err) {
+      await handle.db
+        .update(schema.ingestionRuns)
+        .set({
+          finishedAt: new Date(),
+          status: "error",
+          note: err instanceof Error ? err.message : String(err),
+        })
+        .where(eq(schema.ingestionRuns.id, runId));
+      throw err;
+    }
     await handle.close();
   }
 }
@@ -96,7 +107,7 @@ function printSorted(products: Product[]): void {
 
 /** Read back the top products by protein/CHF from the DB — proves the sort end-to-end. */
 async function report(db: Db, locale: Locale): Promise<void> {
-  const rows = await db
+  const rows = (await db
     .select({
       name: schema.productI18n.name,
       proteinPerChf: schema.productMetrics.proteinPerChf,
@@ -108,9 +119,10 @@ async function report(db: Db, locale: Locale): Promise<void> {
       eq(schema.productI18n.productUid, schema.productMetrics.productUid),
     )
     .where(eq(schema.productI18n.locale, locale))
-    .orderBy(desc(schema.productMetrics.proteinPerChf))
-    .limit(10);
-
+    .limit(50))
+    .filter((r) => r.proteinPerChf !== null)
+    .sort((a, b) => (b.proteinPerChf ?? -1) - (a.proteinPerChf ?? -1))
+    .slice(0, 10);
   console.log("\nTop by protein/CHF (queried from DB):");
   for (const r of rows) {
     const v = r.proteinPerChf === null ? "-" : r.proteinPerChf.toFixed(1);

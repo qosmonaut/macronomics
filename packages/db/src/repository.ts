@@ -19,6 +19,7 @@ export async function upsertProduct(db: Db, p: Product): Promise<void> {
       pricePer100: p.price?.per100,
       pricePer100Unit: p.price?.per100Unit,
       quantity: p.price?.quantity,
+      ingestedAt: new Date(),
     })
     .onConflictDoUpdate({
       target: products.uid,
@@ -30,6 +31,7 @@ export async function upsertProduct(db: Db, p: Product): Promise<void> {
         pricePer100: p.price?.per100,
         pricePer100Unit: p.price?.per100Unit,
         quantity: p.price?.quantity,
+        ingestedAt: new Date(),
       },
     });
 

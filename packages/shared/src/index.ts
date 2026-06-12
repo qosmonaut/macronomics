@@ -29,9 +29,9 @@ export interface Price {
   /** Package price in CHF (Migros `offer.price.effectiveValue`). */
   chf: number;
   /** Price per 100 g/ml (Migros `offer.price.unitPrice.value`), CHF. */
-  per100: number;
+  per100?: number;
   /** Unit of the per-100 price, e.g. "100g" | "100ml". */
-  per100Unit: string;
+  per100Unit?: string;
   /** Human display quantity, e.g. "1l", "500g". */
   quantity?: string;
 }
