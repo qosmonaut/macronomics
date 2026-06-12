@@ -83,6 +83,7 @@ async function main(): Promise<void> {
         .where(eq(schema.ingestionRuns.id, runId));
       throw err;
     }
+  } finally {
     await handle.close();
   }
 }
@@ -107,19 +108,21 @@ function printSorted(products: Product[]): void {
 
 /** Read back the top products by protein/CHF from the DB — proves the sort end-to-end. */
 async function report(db: Db, locale: Locale): Promise<void> {
-  const rows = (await db
-    .select({
-      name: schema.productI18n.name,
-      proteinPerChf: schema.productMetrics.proteinPerChf,
-      proteinPer100: schema.productMetrics.proteinPer100,
-    })
-    .from(schema.productMetrics)
-    .innerJoin(
-      schema.productI18n,
-      eq(schema.productI18n.productUid, schema.productMetrics.productUid),
-    )
-    .where(eq(schema.productI18n.locale, locale))
-    .limit(50))
+  const rows = (
+    await db
+      .select({
+        name: schema.productI18n.name,
+        proteinPerChf: schema.productMetrics.proteinPerChf,
+        proteinPer100: schema.productMetrics.proteinPer100,
+      })
+      .from(schema.productMetrics)
+      .innerJoin(
+        schema.productI18n,
+        eq(schema.productI18n.productUid, schema.productMetrics.productUid),
+      )
+      .where(eq(schema.productI18n.locale, locale))
+      .limit(50)
+  )
     .filter((r) => r.proteinPerChf !== null)
     .sort((a, b) => (b.proteinPerChf ?? -1) - (a.proteinPerChf ?? -1))
     .slice(0, 10);
