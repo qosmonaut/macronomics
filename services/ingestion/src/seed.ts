@@ -13,7 +13,7 @@ import { parseArgs } from "node:util";
 import { createDb, schema, upsertProduct, type Db } from "@macronomics/db";
 import { MigrosClient } from "@macronomics/migros";
 import { computeMetrics, LOCALES, type Locale, type Product } from "@macronomics/shared";
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 // pnpm may forward a leading "--" separator into argv; drop it before parsing.
 const rawArgs = process.argv.slice(2);
