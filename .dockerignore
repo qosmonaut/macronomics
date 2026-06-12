@@ -1,0 +1,14 @@
+.git
+**/node_modules
+.turbo
+**/.turbo
+**/dist
+**/build
+# secrets & local-only
+.env
+.env.*
+.agents
+docs/legal
+# spike scratch + logs
+spikes/**/output
+*.log

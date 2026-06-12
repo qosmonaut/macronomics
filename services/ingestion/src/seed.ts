@@ -13,7 +13,7 @@ import { parseArgs } from "node:util";
 import { createDb, schema, upsertProduct, type Db } from "@macronomics/db";
 import { MigrosClient } from "@macronomics/migros";
 import { computeMetrics, LOCALES, type Locale, type Product } from "@macronomics/shared";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 
 // pnpm may forward a leading "--" separator into argv; drop it before parsing.
 const rawArgs = process.argv.slice(2);
@@ -108,28 +108,25 @@ function printSorted(products: Product[]): void {
 
 /** Read back the top products by protein/CHF from the DB — proves the sort end-to-end. */
 async function report(db: Db, locale: Locale): Promise<void> {
-  const rows = (
-    await db
-      .select({
-        name: schema.productI18n.name,
-        proteinPerChf: schema.productMetrics.proteinPerChf,
-        proteinPer100: schema.productMetrics.proteinPer100,
-      })
-      .from(schema.productMetrics)
-      .innerJoin(
-        schema.productI18n,
-        eq(schema.productI18n.productUid, schema.productMetrics.productUid),
-      )
-      .where(eq(schema.productI18n.locale, locale))
-      .limit(50)
-  )
-    .filter((r) => r.proteinPerChf !== null)
-    .sort((a, b) => (b.proteinPerChf ?? -1) - (a.proteinPerChf ?? -1))
-    .slice(0, 10);
+  // Pure SQL: exclude NULL metrics, order DESC in the DB, take the top 10.
+  const rows = await db
+    .select({
+      name: schema.productI18n.name,
+      proteinPerChf: schema.productMetrics.proteinPerChf,
+    })
+    .from(schema.productMetrics)
+    .innerJoin(
+      schema.productI18n,
+      eq(schema.productI18n.productUid, schema.productMetrics.productUid),
+    )
+    .where(
+      and(eq(schema.productI18n.locale, locale), isNotNull(schema.productMetrics.proteinPerChf)),
+    )
+    .orderBy(desc(schema.productMetrics.proteinPerChf))
+    .limit(10);
   console.log("\nTop by protein/CHF (queried from DB):");
   for (const r of rows) {
-    const v = r.proteinPerChf === null ? "-" : r.proteinPerChf.toFixed(1);
-    console.log(`  ${v.padStart(6)}  ${r.name}`);
+    console.log(`  ${(r.proteinPerChf ?? 0).toFixed(1).padStart(6)}  ${r.name}`);
   }
 }
 

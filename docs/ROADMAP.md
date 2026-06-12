@@ -35,12 +35,15 @@ Legend: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ **Production run** against Supabase EU (needs the project + `DATABASE_URL`).
 - ⬜ **Legal/ToS sanity check** on commercial use of Migros data (pulled forward).
 
-## M2 — tRPC API ⬜
+## M2 — tRPC API 🚧
 
-- `services/api`: Hono + tRPC; product `list`/`search`/`sortBy(metric)` reading Postgres
-  via the **Supabase pooler** (`prepare: false`). `/trpc/v1` path; rate limiting.
-- `packages/shared`: zod schemas + exported router type.
-- Deploy to **Fly.io (Zürich)**; decide scale-to-zero vs one warm machine.
+- ✅ `services/api`: Hono + tRPC at `/trpc/v1` — `product.list` (sort by metric, keyset),
+  `product.get`, `product.search`, `health`; reads via the Supabase pooler (`prepare: false`).
+  In-memory rate limiter. Verified: router test (pglite) + HTTP smoke against Supabase Zurich.
+- ✅ `packages/shared`: zod input schemas + DTOs; `packages/db` query layer; exported `AppRouter` type.
+- ✅ `report()` switched to pure SQL (`WHERE … IS NOT NULL ORDER BY … DESC LIMIT`).
+- ⬜ **Deploy to Fly.io (Zürich):** `Dockerfile` + `fly.toml` ready (scale-to-zero); deferred
+  until `fly` is authed (needs your Fly account + `fly secrets set DATABASE_URL`).
 
 ## M3 — Prototype app (the agreed MVP) ⬜
 

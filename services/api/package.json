@@ -1,0 +1,28 @@
+{
+  "name": "@macronomics/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/router.ts",
+  "types": "./src/router.ts",
+  "exports": {
+    ".": "./src/router.ts"
+  },
+  "scripts": {
+    "dev": "node src/index.ts",
+    "start": "node src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@macronomics/db": "workspace:*",
+    "@macronomics/shared": "workspace:*",
+    "@trpc/server": "^11.0.0",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
