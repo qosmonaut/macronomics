@@ -14,9 +14,11 @@ Legend: ✅ done · 🚧 in progress · ⬜ planned
   - ✅ Node + the wrapper reaches Migros (curl is 403; axios gets through), guest token works.
   - ✅ Products expose **price + all four macros** (100% of the sample); Migros even returns a
     normalized per-100 `unitPrice`. The "sort by protein/CHF" feature was proven on live data.
-  - ❌ Migusto **recipe** endpoint failed (non-JSON error) — paid-tier risk; tracked for M6.
-- **Gate result:** free-tier premise **confirmed → proceed to M1**. Paid-tier recipe sourcing
-  is a separate feasibility item before M6 (derive macros from ingredients or find another source).
+  - ✅ Migusto **recipes** resolved (2026-06-12, [ADR-0002](adr/0002-migusto-recipe-data-path.md)):
+    the wrapper's failure was a stale `order` field; `POST /.rest/recipes/v1` (minus `order`)
+    returns recipes + slugs, and macros come from the detail page's schema.org JSON-LD.
+- **Gate result:** free-tier **and** paid-tier (recipe) premises **confirmed → proceed to M1**.
+  M6 caveat: recipe `carbs` are absent in JSON-LD (derive or match on protein/fat/kcal).
 
 ## M1 — Data pipeline ⬜
 
@@ -54,7 +56,8 @@ Legend: ✅ done · 🚧 in progress · ⬜ planned
 ## M6 — Paid tier ⬜
 
 - Custom macro profiles (protein/fat/carb/kcal targets); ingredient + Migusto-recipe
-  matching; **RevenueCat** entitlements (App Store / Play / Stripe-web).
+  matching (recipe data path: [ADR-0002](adr/0002-migusto-recipe-data-path.md)); **RevenueCat**
+  entitlements (App Store / Play / Stripe-web).
 - **Gate:** resolve the Migros commercial ToS question before charging.
 
 ## M7 — Launch ⬜

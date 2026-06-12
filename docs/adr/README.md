@@ -13,3 +13,4 @@ alternatives that were rejected.
 | ADR                                      | Title                    | Status   |
 | ---------------------------------------- | ------------------------ | -------- |
 | [0001](0001-initial-technology-stack.md) | Initial technology stack | Accepted |
+| [0002](0002-migusto-recipe-data-path.md) | Migusto recipe data path | Accepted |

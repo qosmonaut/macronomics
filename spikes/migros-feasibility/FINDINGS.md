@@ -6,20 +6,20 @@ Run date: **2026-05-31** · wrapper `migros-api-wrapper@1.1.37` · Node 24 · eg
 
 The free-tier premise is **confirmed**: from Node we can reach Migros, get a guest token,
 search, and read **price + all four macros** for products. The paid-tier **recipe** premise
-is **at risk**: the wrapper's Migusto method currently fails. Proceed to M1; treat recipes
-as a separate feasibility item before committing the paid tier (M6).
+is now **also confirmed** (resolved 2026-06-12, see below): Migusto recipe search + macros are
+reachable with no login; the wrapper's failure was a single stale request field (`order`).
 
 ## Results
 
-| Check                            | Result | Notes                                                                                    |
-| -------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
-| Reachability (Node + axios)      | ✅     | `curl` gets HTTP 403 (bot protection); the wrapper's axios client gets through.          |
-| Guest token (anonymous)          | ✅     | `MigrosAPI.account.oauth2.getGuestToken()` → JWT-like `token`.                           |
-| Product search                   | ✅     | `searchProduct({query})` → `productIds` (100 for "milch") + facets.                      |
-| Product price                    | ✅     | `offer.price.effectiveValue` (CHF) — 100% of sample.                                     |
-| Price normalized per 100g/ml     | ✅     | `offer.price.unitPrice {value, unit}` provided by Migros — no manual normalization!      |
-| Macros (energy/protein/carb/fat) | ✅     | `productInformation.nutrientsInformation.nutrientsTable` per 100 g/ml — 100% of sample.  |
-| Migusto recipe macros            | ❌     | `migusto.recipeSearch` returned a non-JSON Spring error — method appears broken/changed. |
+| Check                            | Result | Notes                                                                                                 |
+| -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| Reachability (Node + axios)      | ✅     | `curl` gets HTTP 403 (bot protection); the wrapper's axios client gets through.                       |
+| Guest token (anonymous)          | ✅     | `MigrosAPI.account.oauth2.getGuestToken()` → JWT-like `token`.                                        |
+| Product search                   | ✅     | `searchProduct({query})` → `productIds` (100 for "milch") + facets.                                   |
+| Product price                    | ✅     | `offer.price.effectiveValue` (CHF) — 100% of sample.                                                  |
+| Price normalized per 100g/ml     | ✅     | `offer.price.unitPrice {value, unit}` provided by Migros — no manual normalization!                   |
+| Macros (energy/protein/carb/fat) | ✅     | `productInformation.nutrientsInformation.nutrientsTable` per 100 g/ml — 100% of sample.               |
+| Migusto recipe search + macros   | ✅     | search via `POST /.rest/recipes/v1` (drop `order`) → slugs; macros via detail JSON-LD (carbs absent). |
 
 ### Proof of concept (live data, query "milch")
 
@@ -44,10 +44,25 @@ characteristic" feature on real Migros data.
 - **Completeness caveat:** "milch" is nutrient-rich; M1 must measure completeness across
   diverse categories and mark products missing any macro as unsortable on that metric.
 
-## Open follow-up (before M6 paid tier)
+## Migusto recipes (resolved 2026-06-12)
 
-- Investigate the Migusto failure: is it params/headers, a moved endpoint, or removed from
-  the wrapper? If recipes lack structured macros, the paid tier must **derive** them from
-  ingredients (hard: free-text → product mapping) or use another recipe source.
+The wrapper's `recipeSearch` failure was **not** a move, a login wall, or a bot block.
+`/.rest/recipes/v1` is a JSON endpoint (proxying an upstream GraphQL service); the wrapper's
+default body sends a stale `order: "RELEVANCE_DESC"` that the upstream rejects → HTTP 417
+`GRAPHQL_PARSE_FAILED`. Bisecting the body confirmed `order` is the **sole** culprit
+(`offset` / `uuids` / `language` / `searchTerm` are all accepted).
+
+Working recipe pipeline (no login, no cookies — verified from Node, egress CH):
+
+1. **Search** — `POST https://migusto.migros.ch/.rest/recipes/v1` with
+   `{ recipeFilterUuid, limit, ingredients[], searchTerm? }` → `{ total, recipes:[{ slug, title, … }], aggregations }`.
+   Ingredient IDs (e.g. `"14055874/"` = Poulet) come from the `/.rest/suggest/v1/…` autocomplete.
+2. **Macros** — `GET …/de/rezepte/{slug}` → schema.org JSON-LD `nutrition`:
+   `calories`, `proteinContent`, `fatContent`, `fiberContent`.
+
+Caveats for M6: **`carbohydrateContent` is absent** (derive `≈ (kcal − 4·protein − 9·fat − 2·fibre)/4`,
+or match on protein/fat/kcal); macros require **one extra request per recipe** (cache at ingestion).
+Decision: [ADR-0002](../../docs/adr/0002-migusto-recipe-data-path.md). Reproduce with
+`node src/explore-migusto.ts`.
 
 > Raw API captures live in `output/` (git-ignored). Re-run with `pnpm spike:migros`.
