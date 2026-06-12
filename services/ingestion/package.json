@@ -1,0 +1,20 @@
+{
+  "name": "@macronomics/ingestion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "seed": "node src/seed.ts"
+  },
+  "dependencies": {
+    "@macronomics/db": "workspace:*",
+    "@macronomics/migros": "workspace:*",
+    "@macronomics/shared": "workspace:*",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

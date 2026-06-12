@@ -27,6 +27,12 @@ web-build/
 .env.*
 !.env.example
 
+# Legal/risk docs — kept LOCAL only, intentionally never committed
+docs/legal/
+
+# Installed agent skills (materialized from skills-lock.json) — regenerable, not committed
+.agents/
+
 # Logs
 *.log
 npm-debug.log*

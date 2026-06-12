@@ -6,3 +6,4 @@ build/
 coverage/
 pnpm-lock.yaml
 spikes/**/output/
+packages/db/migrations/

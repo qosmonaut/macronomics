@@ -1,0 +1,434 @@
+{
+  "id": "a085508d-e7d0-4638-94ad-b2806343895f",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.ingestion_runs": {
+      "name": "ingestion_runs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "query": {
+          "name": "query",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "products_upserted": {
+          "name": "products_upserted",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.product_i18n": {
+      "name": "product_i18n",
+      "schema": "",
+      "columns": {
+        "product_uid": {
+          "name": "product_uid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_i18n_product_uid_products_uid_fk": {
+          "name": "product_i18n_product_uid_products_uid_fk",
+          "tableFrom": "product_i18n",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "product_i18n_product_uid_locale_pk": {
+          "name": "product_i18n_product_uid_locale_pk",
+          "columns": [
+            "product_uid",
+            "locale"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.product_metrics": {
+      "name": "product_metrics",
+      "schema": "",
+      "columns": {
+        "product_uid": {
+          "name": "product_uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "protein_per_100": {
+          "name": "protein_per_100",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_per_chf": {
+          "name": "protein_per_chf",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_per_kcal": {
+          "name": "protein_per_kcal",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_per_carb": {
+          "name": "protein_per_carb",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_per_fat": {
+          "name": "protein_per_fat",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "idx_metrics_protein_per_100": {
+          "name": "idx_metrics_protein_per_100",
+          "columns": [
+            {
+              "expression": "protein_per_100",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_metrics_protein_per_chf": {
+          "name": "idx_metrics_protein_per_chf",
+          "columns": [
+            {
+              "expression": "protein_per_chf",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_metrics_protein_per_kcal": {
+          "name": "idx_metrics_protein_per_kcal",
+          "columns": [
+            {
+              "expression": "protein_per_kcal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_metrics_protein_per_carb": {
+          "name": "idx_metrics_protein_per_carb",
+          "columns": [
+            {
+              "expression": "protein_per_carb",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_metrics_protein_per_fat": {
+          "name": "idx_metrics_protein_per_fat",
+          "columns": [
+            {
+              "expression": "protein_per_fat",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "product_metrics_product_uid_products_uid_fk": {
+          "name": "product_metrics_product_uid_products_uid_fk",
+          "tableFrom": "product_metrics",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.product_nutrition": {
+      "name": "product_nutrition",
+      "schema": "",
+      "columns": {
+        "product_uid": {
+          "name": "product_uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "basis": {
+          "name": "basis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "energy_kcal": {
+          "name": "energy_kcal",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protein_g": {
+          "name": "protein_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "carbs_g": {
+          "name": "carbs_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fat_g": {
+          "name": "fat_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sugars_g": {
+          "name": "sugars_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "saturated_fat_g": {
+          "name": "saturated_fat_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fibre_g": {
+          "name": "fibre_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "salt_g": {
+          "name": "salt_g",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "product_nutrition_product_uid_products_uid_fk": {
+          "name": "product_nutrition_product_uid_products_uid_fk",
+          "tableFrom": "product_nutrition",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_uid"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.products": {
+      "name": "products",
+      "schema": "",
+      "columns": {
+        "uid": {
+          "name": "uid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "migros_id": {
+          "name": "migros_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brand": {
+          "name": "brand",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_chf": {
+          "name": "price_chf",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_per_100": {
+          "name": "price_per_100",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_per_100_unit": {
+          "name": "price_per_100_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "raw": {
+          "name": "raw",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ingested_at": {
+          "name": "ingested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

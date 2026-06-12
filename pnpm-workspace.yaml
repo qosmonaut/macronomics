@@ -6,3 +6,8 @@ packages:
   - "services/*"
   - "packages/*"
   - "spikes/*"
+
+# Allow build scripts only for vetted dependencies (pnpm blocks them by default).
+# esbuild ships a prebuilt binary used by some dev tooling (e.g. drizzle-kit).
+allowBuilds:
+  esbuild: true
