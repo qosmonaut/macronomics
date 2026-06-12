@@ -1,0 +1,18 @@
+{
+  "name": "@macronomics/spike-migros-feasibility",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "M0 throwaway spike: verify Migros data is reachable and usable from Node.",
+  "scripts": {
+    "start": "node src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "migros-api-wrapper": "1.1.37"
+  }
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
