@@ -106,7 +106,7 @@ async function probe(label: string, run: () => Promise<unknown>): Promise<void> 
   }
 }
 
-/** Recipe macros via the public detail page's schema.org JSON-LD (no API/GraphQL needed). */
+/** Recipe macros (per portion) from the public detail page's embedded German nutrition object. */
 async function probeRecipeNutrition(slug: string): Promise<void> {
   const tag = String(++n).padStart(2, "0");
   const url = `https://migusto.migros.ch/de/rezepte/${slug}`;
@@ -123,14 +123,32 @@ async function probeRecipeNutrition(slug: string): Promise<void> {
         /* not all ld+json blocks are JSON we care about */
       }
     }
-    const nutrition = recipe?.nutrition;
+    // AUTHORITATIVE source: the page embeds an explicit German nutrition object (per portion),
+    // e.g. 'nährwertkcal': 450, 'nährwerteiweiss': 23, 'nährwertfett': 29, 'nährwertkohlenhydrate': 22.
+    // The JSON-LD `nutrition` MISLABELS carbohydrates as `fiberContent` (and provides no real fibre),
+    // so we parse these keys instead of trusting the JSON-LD field names.
+    const num = (key: string): number | undefined => {
+      const m = body.match(new RegExp(`n[äa]hrwert${key}'?\\s*:\\s*(\\d+(?:[.,]\\d+)?)`, "i"));
+      return m ? Number(m[1]!.replace(",", ".")) : undefined;
+    };
+    const macros = {
+      kcal: num("kcal"),
+      proteinG: num("eiweiss"),
+      fatG: num("fett"),
+      carbsG: num("kohlenhydrate"),
+    };
+    const nutrition = recipe?.nutrition as Record<string, unknown> | undefined;
     await writeFile(
       join(OUTPUT_DIR, `migusto-${tag}.txt`),
-      `recipe detail JSON-LD: ${url}\nHTTP ${status}\n\n${JSON.stringify(recipe, null, 2)}`,
+      `recipe detail: ${url}\nHTTP ${status} · yield ${recipe?.recipeYield ?? "?"}\n` +
+        `macros per portion (German keys): ${JSON.stringify(macros)}\n` +
+        `JSON-LD nutrition (note: fiberContent is actually carbs): ${JSON.stringify(nutrition)}\n`,
     );
-    console.log(`${nutrition ? "✅" : "⚠️ "} [${tag}] recipe macros via detail JSON-LD  ${slug}`);
+    const ok = macros.carbsG !== undefined && macros.proteinG !== undefined;
+    console.log(`${ok ? "✅" : "⚠️ "} [${tag}] recipe macros (per portion)  ${slug}`);
+    console.log(`     HTTP ${status} · ${JSON.stringify(macros)}`);
     console.log(
-      `     HTTP ${status} · yield ${recipe?.recipeYield ?? "?"} · nutrition ${nutrition ? JSON.stringify(nutrition) : "NONE"}`,
+      `     JSON-LD fiberContent=${String(nutrition?.fiberContent)} (== carbs; mislabeled)`,
     );
   } catch (error) {
     console.log(`❌ [${tag}] recipe detail ${slug}: ${(error as Error).message}`);

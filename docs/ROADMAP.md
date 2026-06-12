@@ -18,7 +18,8 @@ Legend: ✅ done · 🚧 in progress · ⬜ planned
     the wrapper's failure was a stale `order` field; `POST /.rest/recipes/v1` (minus `order`)
     returns recipes + slugs, and macros come from the detail page's schema.org JSON-LD.
 - **Gate result:** free-tier **and** paid-tier (recipe) premises **confirmed → proceed to M1**.
-  M6 caveat: recipe `carbs` are absent in JSON-LD (derive or match on protein/fat/kcal).
+  M6 note: recipe macros (kcal/protein/fat/carbs, per portion) come from the detail page's German
+  nutrition keys; the JSON-LD mislabels carbs as `fiberContent` and no real fibre is published.
 
 ## M1 — Data pipeline ⬜
 

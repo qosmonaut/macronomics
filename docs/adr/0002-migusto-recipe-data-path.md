@@ -23,9 +23,11 @@ A DevTools capture of the live site plus a request-body bisect (see the spike's
 - The wrapper fails **only** because its default body includes a stale field
   `order: "RELEVANCE_DESC"` that the upstream no longer accepts → HTTP 417 `GRAPHQL_PARSE_FAILED`.
   Removing `order` returns `200` with `{ total, recipes:[{ slug, … }], aggregations }`.
-- Recipe **macros** are not in the search response but are present in each recipe **detail
-  page's** schema.org JSON-LD (`nutrition`: `calories`, `proteinContent`, `fatContent`,
-  `fiberContent`) — **`carbohydrateContent` is absent**.
+- Recipe **macros (per portion)** are not in the search response but are on each recipe **detail
+  page**, in an embedded German nutrition object (`'nährwertkcal'`, `'nährwerteiweiss'`,
+  `'nährwertfett'`, `'nährwertkohlenhydrate'`) → kcal, protein, fat, **carbs**. ⚠️ The schema.org
+  JSON-LD on the same page **mislabels carbohydrates as `fiberContent`** and publishes no real
+  fibre — verified: JSON-LD `fiberContent` == HTML `Kohlenhydrate`, and `4·P + 9·F + 4·C ≈ kcal`.
 
 ## Decision
 
@@ -35,18 +37,18 @@ M1/M6 `packages/migros` adapter:
 1. **Search:** `POST /.rest/recipes/v1` directly with a minimal, current body
    `{ recipeFilterUuid, limit, ingredients[], searchTerm? }` (never send `order`). Resolve
    ingredient IDs via the `/.rest/suggest/v1/…` autocomplete when filtering by ingredient.
-2. **Macros:** fetch each recipe's detail page by `slug` and parse the schema.org `Recipe`
-   JSON-LD `nutrition` block (the wrapper already scrapes this page; we additionally keep the
-   `nutrition` field it currently drops).
-3. **Carbs:** derive `carbs ≈ (kcal − 4·protein − 9·fat − 2·fibre) / 4` when absent, and flag
-   the value as derived; otherwise match profiles on protein/fat/kcal only.
+2. **Macros:** fetch each recipe's detail page by `slug` and parse the **embedded German
+   nutrition keys** (`nährwertkcal` / `nährwerteiweiss` / `nährwertfett` / `nährwertkohlenhydrate`),
+   not the JSON-LD field names. This yields kcal + protein + fat + carbs per portion as integers.
+   Do **not** read the JSON-LD `fiberContent` (it is actually the carbohydrate value).
 
 ## Consequences
 
 - ✅ Paid-tier recipe premise is **viable** with public, anonymous endpoints.
 - One **extra request per recipe** for macros → cache aggressively at ingestion (M6), don't
   fetch per user request.
-- Carbs are **estimated**, not authoritative — surface this in the UI/data model.
+- Full **protein/fat/carbs/kcal per portion** are available (no derivation needed); **fibre is
+  not published**. The macro-profile matching (M6) has the inputs it needs.
 - Same upstream-churn risk as products → cover the recipe calls with the adapter's contract
   tests + canary (ADR-0001 §13). If Migros changes the body contract again, only the adapter
   changes.

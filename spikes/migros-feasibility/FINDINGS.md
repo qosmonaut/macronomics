@@ -11,15 +11,15 @@ reachable with no login; the wrapper's failure was a single stale request field 
 
 ## Results
 
-| Check                            | Result | Notes                                                                                                 |
-| -------------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| Reachability (Node + axios)      | ✅     | `curl` gets HTTP 403 (bot protection); the wrapper's axios client gets through.                       |
-| Guest token (anonymous)          | ✅     | `MigrosAPI.account.oauth2.getGuestToken()` → JWT-like `token`.                                        |
-| Product search                   | ✅     | `searchProduct({query})` → `productIds` (100 for "milch") + facets.                                   |
-| Product price                    | ✅     | `offer.price.effectiveValue` (CHF) — 100% of sample.                                                  |
-| Price normalized per 100g/ml     | ✅     | `offer.price.unitPrice {value, unit}` provided by Migros — no manual normalization!                   |
-| Macros (energy/protein/carb/fat) | ✅     | `productInformation.nutrientsInformation.nutrientsTable` per 100 g/ml — 100% of sample.               |
-| Migusto recipe search + macros   | ✅     | search via `POST /.rest/recipes/v1` (drop `order`) → slugs; macros via detail JSON-LD (carbs absent). |
+| Check                            | Result | Notes                                                                                                                        |
+| -------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Reachability (Node + axios)      | ✅     | `curl` gets HTTP 403 (bot protection); the wrapper's axios client gets through.                                              |
+| Guest token (anonymous)          | ✅     | `MigrosAPI.account.oauth2.getGuestToken()` → JWT-like `token`.                                                               |
+| Product search                   | ✅     | `searchProduct({query})` → `productIds` (100 for "milch") + facets.                                                          |
+| Product price                    | ✅     | `offer.price.effectiveValue` (CHF) — 100% of sample.                                                                         |
+| Price normalized per 100g/ml     | ✅     | `offer.price.unitPrice {value, unit}` provided by Migros — no manual normalization!                                          |
+| Macros (energy/protein/carb/fat) | ✅     | `productInformation.nutrientsInformation.nutrientsTable` per 100 g/ml — 100% of sample.                                      |
+| Migusto recipe search + macros   | ✅     | search via `POST /.rest/recipes/v1` (drop `order`) → slugs; macros (kcal/protein/fat/carbs, per portion) on the detail page. |
 
 ### Proof of concept (live data, query "milch")
 
@@ -57,12 +57,15 @@ Working recipe pipeline (no login, no cookies — verified from Node, egress CH)
 1. **Search** — `POST https://migusto.migros.ch/.rest/recipes/v1` with
    `{ recipeFilterUuid, limit, ingredients[], searchTerm? }` → `{ total, recipes:[{ slug, title, … }], aggregations }`.
    Ingredient IDs (e.g. `"14055874/"` = Poulet) come from the `/.rest/suggest/v1/…` autocomplete.
-2. **Macros** — `GET …/de/rezepte/{slug}` → schema.org JSON-LD `nutrition`:
-   `calories`, `proteinContent`, `fatContent`, `fiberContent`.
+2. **Macros (per portion)** — `GET …/de/rezepte/{slug}`; parse the page's embedded German
+   nutrition object (`'nährwertkcal'`, `'nährwerteiweiss'`, `'nährwertfett'`, `'nährwertkohlenhydrate'`)
+   → **kcal, protein, fat, carbs** as clean integers. ⚠️ The schema.org JSON-LD on the same page
+   **mislabels carbohydrates as `fiberContent`** (and exposes no real fibre), so do **not** trust its
+   field names — parse the German keys. Verified: JSON-LD `fiberContent` == HTML `Kohlenhydrate` for
+   every sample, and `4·protein + 9·fat + 4·carbs ≈ kcal`.
 
-Caveats for M6: **`carbohydrateContent` is absent** (derive `≈ (kcal − 4·protein − 9·fat − 2·fibre)/4`,
-or match on protein/fat/kcal); macros require **one extra request per recipe** (cache at ingestion).
-Decision: [ADR-0002](../../docs/adr/0002-migusto-recipe-data-path.md). Reproduce with
-`node src/explore-migusto.ts`.
+Caveats for M6: **no fibre** value is published; macros need **one extra request per recipe**
+(cache at ingestion). Decision: [ADR-0002](../../docs/adr/0002-migusto-recipe-data-path.md).
+Reproduce with `node src/explore-migusto.ts`.
 
 > Raw API captures live in `output/` (git-ignored). Re-run with `pnpm spike:migros`.
