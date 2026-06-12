@@ -27,6 +27,9 @@ web-build/
 .env.*
 !.env.example
 
+# Legal/risk docs — kept LOCAL only, intentionally never committed
+docs/legal/
+
 # Logs
 *.log
 npm-debug.log*
